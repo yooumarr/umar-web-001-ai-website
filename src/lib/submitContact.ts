@@ -1,4 +1,5 @@
-const FUNCTION_URL_FILE: string = import.meta.env.VITE_CONTACT_FUNCTION_URL ?? "";
+const FUNCTION_URL: string =
+  import.meta.env.VITE_CONTACT_FUNCTION_URL ?? "https://kyfhfmqjggkybpepnnyf.supabase.co/functions/v1/contact-submit";
 
 const REQUEST_BODY_LIMIT = 8_192;
 
@@ -14,7 +15,7 @@ export type SubmitResult =
   | { ok: false; kind: "validation" | "network" | "server"; fieldErrors?: Record<string, string>; message: string };
 
 export function isConfigured(): boolean {
-  return FUNCTION_URL_FILE.length > 0;
+  return FUNCTION_URL.length > 0;
 }
 
 export async function submitContact(payload: ContactPayload): Promise<SubmitResult> {
@@ -24,7 +25,7 @@ export async function submitContact(payload: ContactPayload): Promise<SubmitResu
 
   let response: Response;
   try {
-    response = await fetch(FUNCTION_URL_FILE, {
+    response = await fetch(FUNCTION_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...payload, website: "" }),
@@ -47,7 +48,6 @@ export async function submitContact(payload: ContactPayload): Promise<SubmitResu
     const fallback = response.status === 413 ? "Your message is too large." : "Please check the highlighted fields.";
     return { ok: false, kind: "validation", fieldErrors, message: (typeof data?.error === "string" ? data.error : fallback) || fallback };
   }
-
   return { ok: false, kind: "server", message: "We could not store your submission. Please try again later." };
 }
 
