@@ -28,7 +28,3 @@ Form (request_id UUID, honeypot website="")
 ```
 
 Retries reuse the same `request_id`; failures never fake success.
-
-## Deployment
-
-Push to `main` → `.github/workflows/deploy.yml` runs `npm ci` → lint → build → deploys `dist/` via GitHub Pages Actions. Also triggered manually (workflow_dispatch). Vite `base` is set for the project Pages path.
