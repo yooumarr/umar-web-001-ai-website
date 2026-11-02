@@ -4,6 +4,7 @@ import {
   ArrowUpRight,
   Check,
   Clock3,
+  CalendarDays,
   House,
   Mail,
   Menu,
@@ -162,7 +163,7 @@ function ContactForm() {
         <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
       <Button className="submit-button" type="submit" disabled={status === "submitting"}>
-        {status === "submitting" ? "Sending…" : <>Contact Us <ArrowRight size={18} /></>}
+        {status === "submitting" ? "Sending…" : <>Request a Callback <ArrowRight size={18} /></>}
       </Button>
       {errorMessage && <p className="form-error" role="alert">{errorMessage}</p>}
       {status === "success" && (
@@ -219,7 +220,7 @@ function App() {
 
           <section className="contact-section" id="contact" aria-labelledby="contact-title">
             <div className="contact-copy"><p className="eyebrow"><span /> Start a conversation</p><h2 id="contact-title">What’s on<br />your <em>list?</em></h2><p>Tell us about the little things you’d love to get done. We’ll take it from there—one step at a time.</p><div className="contact-aside"><span className="aside-icon"><Mail size={19} /></span><span><strong>Prefer a note?</strong><small>Send a message using the form</small></span></div></div>
-            <div className="contact-form-panel"><div className="form-heading"><span>01 <i>—</i> SAY HELLO</span><span className="form-spark">✳</span></div><ContactForm /></div>
+            <div className="contact-form-panel"><div className="weekend-callout"><span className="weekend-icon" aria-hidden="true"><CalendarDays size={20} /></span><span><strong>Weekend appointments</strong><small>Saturday and Sunday availability—request a callback to find a time that works.</small></span><span className="weekend-status">AVAILABLE</span></div><div className="form-heading"><span>01 <i>—</i> SAY HELLO</span><span className="form-spark">✳</span></div><ContactForm /></div>
           </section>
         </main>
 
