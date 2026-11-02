@@ -17,6 +17,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      VITE_CONTACT_FUNCTION_URL: ${{ secrets.VITE_CONTACT_FUNCTION_URL }}
     steps:
       - uses: actions/checkout@v4
 
