@@ -1,5 +1,5 @@
 const FUNCTION_URL: string =
-  import.meta.env.VITE_CONTACT_FUNCTION_URL ?? "https://kyfhfmqjggkybpepnnyf.supabase.co/functions/v1/contact-submit";
+  import.meta.env.VITE_CONTACT_FUNCTION_URL || "https://kyfhfmqjggkybpepnnyf.supabase.co/functions/v1/contact-submit";
 
 const REQUEST_BODY_LIMIT = 8_192;
 
