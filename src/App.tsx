@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { submitContact } from '@/lib/submitContact';
 import './App.css';
 
 type Service = {
@@ -96,33 +97,76 @@ function ServiceCard({ service }: { service: Service }) {
 }
 
 function ContactForm() {
-  const [submitted, setSubmitted] = useState(false);
+  const requestIdRef = useRef<string | null>(null);
+  const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // Demo only: no network request is made and no information is stored.
-    setSubmitted(true);
-    event.currentTarget.reset();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+
+    // reuse the same request_id on retry so the backend stores exactly one row
+    if (requestIdRef.current === null) {
+      requestIdRef.current = crypto.randomUUID();
+    }
+
+    setStatus("submitting");
+    setErrorMessage(null);
+    setFieldErrors({});
+
+    const result = await submitContact({
+      request_id: requestIdRef.current,
+      name: String(data.get("name") ?? ""),
+      email: String(data.get("email") ?? ""),
+      message: String(data.get("message") ?? ""),
+    });
+
+    if (result.ok) {
+      requestIdRef.current = null;
+      setFieldErrors({});
+      setStatus("success");
+      form.reset();
+      return;
+    }
+
+    setFieldErrors(result.fieldErrors ?? {});
+    setErrorMessage(result.message);
+    setStatus("idle"); // form values and request_id are preserved for retry
   }
 
+  const inputErrorProps = (field: "name" | "email" | "message") =>
+    fieldErrors[field] ? { "aria-invalid": true as const, "aria-describedby": `${field}-error` } : {};
+
   return (
-    <form className="contact-form" onSubmit={handleSubmit}>
+    <form className="contact-form" onSubmit={handleSubmit} noValidate>
       <div className="form-row">
         <label htmlFor="name">Your name</label>
-        <input id="name" name="name" type="text" autoComplete="name" placeholder="Jane Smith" required />
+        <input id="name" name="name" type="text" autoComplete="name" placeholder="Jane Smith" {...inputErrorProps("name")} />
+        {fieldErrors.name && <p className="form-error" id="name-error" role="alert">{fieldErrors.name}</p>}
       </div>
       <div className="form-row">
         <label htmlFor="email">Email address</label>
-        <input id="email" name="email" type="email" autoComplete="email" placeholder="jane@example.com" required />
+        <input id="email" name="email" type="email" autoComplete="email" placeholder="jane@example.com" {...inputErrorProps("email")} />
+        {fieldErrors.email && <p className="form-error" id="email-error" role="alert">{fieldErrors.email}</p>}
       </div>
       <div className="form-row">
         <label htmlFor="message">How can we help?</label>
-        <textarea id="message" name="message" rows={4} placeholder="Tell us a little about your project…" required />
+        <textarea id="message" name="message" rows={4} placeholder="Tell us a little about your project…" {...inputErrorProps("message")} />
+        {fieldErrors.message && <p className="form-error" id="message-error" role="alert">{fieldErrors.message}</p>}
       </div>
-      <Button className="submit-button" type="submit">Contact Us <ArrowRight size={18} /></Button>
-      <p className="form-note">This demo form does not send or save your information.</p>
-      {submitted && (
-        <p className="form-success" role="status"><Check size={17} /> Thanks for reaching out. This is a demo—nothing was sent or saved.</p>
+      {/* honeypot — hidden from humans, filled by bots; the backend rejects any non-empty value */}
+      <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", height: 0, overflow: "hidden" }}>
+        <label htmlFor="website">Website</label>
+        <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
+      <Button className="submit-button" type="submit" disabled={status === "submitting"}>
+        {status === "submitting" ? "Sending…" : <>Contact Us <ArrowRight size={18} /></>}
+      </Button>
+      {errorMessage && <p className="form-error" role="alert">{errorMessage}</p>}
+      {status === "success" && (
+        <p className="form-success" role="status"><Check size={17} /> Thanks for reaching out. Your message was received.</p>
       )}
     </form>
   );

@@ -1,0 +1,4 @@
+project_id = "web-001-ai-website"
+
+[functions.contact-submit]
+verify_jwt = false
